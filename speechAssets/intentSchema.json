@@ -1,0 +1,43 @@
+{
+  "intents": [
+    {
+      "intent": "addItem",
+      "slots": [
+        {
+          "name": "foodItem",
+          "type": "FOOD_LIST"
+        },
+        {
+          "name": "expDate",
+          "type": "AMAZON.DURATION"
+        }
+      ] 
+    },
+	{
+      "intent": "getItem",
+      "slots": [
+        {
+          "name": "expDate",
+          "type": "AMAZON.DURATION"
+        },
+        {
+          "name":"foodItem",
+          "type":"FOOD_LIST"
+        }
+      ] 
+    },
+    {
+      "intent": "delList"
+    },
+    {
+      "intent": "delItem",
+      "slots": [
+        {
+          "name": "foodItem",
+          "type": "FOOD_LIST"
+        }
+      ] 
+    }
+   
+  ]
+}

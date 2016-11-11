@@ -1,0 +1,32 @@
+{
+  "session": {
+    "sessionId": "SessionId.f407d9fd-8b1c-431b-8507-a8c3ecc8f957",
+    "application": {
+      "applicationId": "amzn1.ask.skill.6922232e-c449-4b18-b8a6-ad699ef2182a"
+    },
+    "attributes": {},
+    "user": {
+      "userId": "amzn1.ask.account.AGMPJGLV3KK5AMXQDIIHLGISVFMO5KRCBHJLCM5QCHOAI5V6R22JGVF5B6TFXZDXRMX5GTIE2ANPI373YIJXN43XORR66XEJQ4EBFW4XGQPSKSIO6M4HXNBO4XEVHX4S6J7MWDPMEOGJDWP46FM5WDEIIV3N3FI77XNKBZOS7JHK3X673RYOOYWBH4LRKH6NUDVHE6YBR7IU36Y"
+    },
+    "new": true
+  },
+  "request": {
+    "type": "IntentRequest",
+    "requestId": "EdwRequestId.a5e4ab6c-ec05-4da2-8338-b7fc70bf1d15",
+    "locale": "en-US",
+    "timestamp": "2016-10-23T06:05:19Z",
+    "intent": {
+      "name": "addItem",
+      "slots": {
+        "foodItem": {
+          "name": "foodItem",
+          "value": "strawberry"
+        },
+        "expDate": {
+          "name": "expDate"
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

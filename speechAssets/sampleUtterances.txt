@@ -1,0 +1,25 @@
+addItem add {foodItem} to the tracker
+addItem add {foodItem} to the list
+addItem add a new item for {foodItem} expiring in {expDate}
+addItem create a new list for {foodItem}
+addItem create a new list for {foodItem} expiring in {expDate}
+addItem create a new list for {foodItem} with expiry {expDate}
+
+getItem get foods expiring {expDate}
+getItem get items expiring {expDate}
+getItem get {foodItem} expiry
+getItem tell {foodItem} expiry
+
+
+delList clear all entries
+delList remove all entries
+delList delete all entries
+delList reset all entries
+
+
+delItem remove {foodItem} from list
+delItem remove {foodItem}
+delItem delete {foodItem} from list
+delItem delete {foodItem}
+delItem clear {foodItem} from list
+delItem clear {foodItem}

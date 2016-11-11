@@ -1,0 +1,26 @@
+application ID is event.session.application.applicationId= (amzn1.ask.skill.692223
+2e-c449-4b18-b8a6-ad699ef2182a)
+
+App invoked from is right
+
+onSessionStarted 
+ (requestId= EdwRequestId.865c9d9a-917c-4e9c-bafd-9c239290fae4,)
+ (sessionId=SessionId.49323c59-1fba-457c-81bb-bb3d385a09f5)
+
+onIntent 
+(requestId=EdwRequestId.865c9d9a-917c-4e9c-bafd-9c239290fae4,)
+(sessionId=SessionId.49323c59-1fba-457c-81bb-bb3d385a09f5)
+
+{ name: 'addItem',
+  slots:
+   { foodItem: { name: 'foodItem', value: 'blueberry' },
+     expDate: { name: 'expDate' } } }
+{ new: true,
+  sessionId: 'SessionId.49323c59-1fba-457c-81bb-bb3d385a09f5',
+  application: { applicationId: 'amzn1.ask.skill.6922232e-c449-4b18-b8a6-ad699ef
+2182a' },
+  attributes: {},
+  user: { userId: 'amzn1.ask.account.AGMPJGLV3KK5AMXQDIIHLGISVFMO5KRCBHJLCM5QCHO
+AI5V6R22JGVF5B6TFXZDXRMX5GTIE2ANPI373YIJXN43XORR66XEJQ4EBFW4XGQPSKSIO6M4HXNBO4XE
+VHX4S6J7MWDPMEOGJDWP46FM5WDEIIV3N3FI77XNKBZOS7JHK3X673RYOOYWBH4LRKH6NUDVHE6YBR7I
+U36Y' } }
