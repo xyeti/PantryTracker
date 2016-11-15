@@ -20,7 +20,7 @@
       "slots": {
         "foodItem": {
           "name": "foodItem",
-          "value": "strawberry"
+          "value": "bacon"
         },
         "expDate": {
           "name": "expDate"

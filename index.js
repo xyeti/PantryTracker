@@ -2,18 +2,16 @@
 var Alexa = require('alexa-sdk');
 //var dynamoDb =require ('dynamodb-local');
 
-// Remember to add dynasty requirement for deployment to the cloud
-
-
-
 var APP_ID = "amzn1.ask.skill.6922232e-c449-4b18-b8a6-ad699ef2182a"; 
 var SKILL_NAME = 'Pantry Tracker';
 
+var status = 'not active';
 
 /**
  * Array containing Pantry items, expiry and refrigeration status
  */
 var ITEMS;
+
 
 exports.handler = function(event, context, callback) {
     var alexa = Alexa.handler(event, context);
@@ -28,7 +26,15 @@ var handlers = {
     },
 
     'addItem': function () { // adding an item to the list
-        
+
+        if (status == 'not active')
+        {
+            var jsonArray = require('./foodKeeper_minimal.json');
+            status = 'ACTIVE'; 
+        }
+
+        console.log(jsonArray.data[10].Name);
+
         var foodItem = this.event.request.intent.slots.foodItem.value;
         var expDate = this.event.request.intent.slots.expDate;
 
@@ -43,6 +49,7 @@ var handlers = {
         var content = `Item ${foodItem} added to the list with expiry ${expDate}`;
 
         this.emit(':askWithCard', speechOutput, reprompt, SKILL_NAME,content);
+
     },
     'AMAZON.HelpIntent': function () {
         var speechOutput = "You can ask me to add/delete/update a list of food items and their expiry date";
