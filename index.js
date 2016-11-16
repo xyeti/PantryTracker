@@ -1,17 +1,26 @@
 'use strict';
 var Alexa = require('alexa-sdk');
+var moment = require('moment');
 //var dynamoDb =require ('dynamodb-local');
+
+
+
+var statemachine = { 
+    onBoardingState: '',
+    initializationComplete:'',
+    activeListening:'',
+    endSession:''
+};
 
 var APP_ID = "amzn1.ask.skill.6922232e-c449-4b18-b8a6-ad699ef2182a"; 
 var SKILL_NAME = 'Pantry Tracker';
 
-var status = 'not active';
+var arrayState = '';
 
 /**
  * Array containing Pantry items, expiry and refrigeration status
  */
 var ITEMS;
-
 
 exports.handler = function(event, context, callback) {
     var alexa = Alexa.handler(event, context);
@@ -21,38 +30,56 @@ exports.handler = function(event, context, callback) {
 };
 
 var handlers = {
+
+    // Launch request: skill is invoked with no parameters
     'LaunchRequest': function () {
         this.emit('AMAZON.HelpIntent');
     },
 
     'addItem': function () { // adding an item to the list
-
-        if (status == 'not active')
-        {
-            var jsonArray = require('./foodKeeper_minimal.json');
-            status = 'ACTIVE'; 
-        }
-
-        console.log(jsonArray.data[10].Name);
-
+        
         var foodItem = this.event.request.intent.slots.foodItem.value;
         var expDate = this.event.request.intent.slots.expDate;
 
-        if (expDate === undefined)
+        if(arrayState === '')
         {
-            expDate = '1 week';
+            //Here is the parsed text file in an array for food reference
+            var jsonArray = require("./foodKeeper_minimal.json");
+            arrayState = 'ACTIVE';
         }
-    
+
+        if (jsonArray)
+        {
+            for(var i=0;i<jsonArray.maxRows;i++)
+            {
+                if(foodItem.toLowerCase() === jsonArray.data[i].Name.toLowerCase())
+                {
+                    console.log(`found the item ${foodItem} in the list`);
+                }
+            }
+            var now = moment();
+            
+            console.dir('Time = '+ now.format());
+
+            console.log("eD="+ expDate);
+
+            if (expDate === 'undefined')
+            {
+                now = moment.add(1, "week");
+                console.dir('New Time = '+ now.format());
+            }
+            
+        }//jsonArray is valid
+
         //Speech output 
         var speechOutput = `${foodItem} added to yor list. Do you like to add anything else?`;
         var reprompt = "Do you like to add anything else?";
         var content = `Item ${foodItem} added to the list with expiry ${expDate}`;
 
         this.emit(':askWithCard', speechOutput, reprompt, SKILL_NAME,content);
-
     },
     'AMAZON.HelpIntent': function () {
-        var speechOutput = "You can ask me to add/delete/update a list of food items and their expiry date";
+        var speechOutput = "You can ask me to add, delete or update a food item and its expiry date for your pantry";
         var reprompt = "What can I help you with?";
         this.emit(':ask', speechOutput, reprompt);
     },
