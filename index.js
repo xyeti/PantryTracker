@@ -39,7 +39,7 @@ var handlers = {
     'addItem': function () { // adding an item to the list
         
         var foodItem = this.event.request.intent.slots.foodItem.value;
-        var expDate = this.event.request.intent.slots.expDate;
+        var expDate = this.event.request.intent.slots.expDate.value;
 
         if(arrayState === '')
         {
@@ -55,21 +55,31 @@ var handlers = {
                 if(foodItem.toLowerCase() === jsonArray.data[i].Name.toLowerCase())
                 {
                     console.log(`found the item ${foodItem} in the list`);
+                    var obj = jsonArray.data[i];
                 }
             }
             var now = moment();
             
-            console.dir('Time = '+ now.format());
+            console.dir(JSON.stringify(obj));
 
-            console.log("eD="+ expDate);
+            var timeStore = getTimes(obj);
 
+            console.log("Time from TiemStore="+timeStore[duration]);
+            
             if (expDate === 'undefined')
             {
                 now = moment.add(1, "week");
                 console.dir('New Time = '+ now.format());
             }
+            else
+            {
+                var duration = moment.duration(expDate);
+                
+                var newDate = now.add(duration);
+                console.log('duration value = '+ newDate.format());
+            }
             
-        }//jsonArray is valid
+        } //jsonArray is valid
 
         //Speech output 
         var speechOutput = `${foodItem} added to yor list. Do you like to add anything else?`;
@@ -90,3 +100,26 @@ var handlers = {
         this.emit(':tell', 'Thanks for trying the Pantry Tracker. Good Bye!');
     }
 };
+
+//Look at the object and return object with times for refrigerate 
+function getTimes(obj)
+{
+    var timeObj;
+
+    if((obj['Refrigerate_Min'] === 'null') && (obj['Refrigerate_Min'] === 'null'))
+    {
+
+        if((obj['DOP_Refrigerate_Min'] === 'null') && (obj['DOP_Refrigerate_Min'] === 'null'))  
+        {
+            console.log('item not refrigeratable');
+        }
+        else
+        {
+            //convert the time into duration and return the time
+            timeObj['duration'] = "P3M";
+        }
+
+    }
+
+return timeObj;
+}
