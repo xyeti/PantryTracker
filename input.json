@@ -1,6 +1,6 @@
 {
   "session": {
-    "sessionId": "SessionId.f407d9fd-8b1c-431b-8507-a8c3ecc8f957",
+    "sessionId": "SessionId.fe88fb8b-fe7a-4a8c-a2c3-409d232b2061",
     "application": {
       "applicationId": "amzn1.ask.skill.6922232e-c449-4b18-b8a6-ad699ef2182a"
     },
@@ -8,19 +8,23 @@
     "user": {
       "userId": "amzn1.ask.account.AGMPJGLV3KK5AMXQDIIHLGISVFMO5KRCBHJLCM5QCHOAI5V6R22JGVF5B6TFXZDXRMX5GTIE2ANPI373YIJXN43XORR66XEJQ4EBFW4XGQPSKSIO6M4HXNBO4XEVHX4S6J7MWDPMEOGJDWP46FM5WDEIIV3N3FI77XNKBZOS7JHK3X673RYOOYWBH4LRKH6NUDVHE6YBR7IU36Y"
     },
-    "new": true
+    "new": false
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "EdwRequestId.a5e4ab6c-ec05-4da2-8338-b7fc70bf1d15",
+    "requestId": "EdwRequestId.6bdcad86-c472-4a4c-8574-9c5b03e832a9",
     "locale": "en-US",
-    "timestamp": "2016-10-23T06:05:19Z",
+    "timestamp": "2016-11-30T15:01:53Z",
     "intent": {
       "name": "addItem",
       "slots": {
+        "storeType": {
+          "name": "storeType",
+          "value": "freezer"
+        },
         "foodItem": {
           "name": "foodItem",
-          "value": "bacon"
+          "value": "potatoes"
         },
         "expDate": {
           "name": "expDate"

@@ -10,6 +10,10 @@
         {
           "name": "expDate",
           "type": "AMAZON.DURATION"
+        },
+        {
+          "name": "storeType",
+          "type": "STORAGE_LIST"
         }
       ] 
     },
