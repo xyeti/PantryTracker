@@ -44,6 +44,9 @@ var handlers = {
         var expDate = this.event.request.intent.slots.expDate.value;
         var storeType = this.event.request.intent.slots.storeType.value;
         var obj;
+       
+
+        console.log('Storetype === '+ storeType);
 
         if(arrayState === '')
         {
@@ -64,8 +67,8 @@ var handlers = {
                 }
             }
 
-
-            var now = moment();
+            console.dir(JSON.stringify(obj,null),{depth:null, colors:true});
+     
                         
             console.log(expDate);
 
@@ -73,35 +76,28 @@ var handlers = {
             if (expDate === undefined)
             {
                 // StoreType is not provided
-                if(StoreType === undefined)
+                if(storeType === undefined)
                 {
-                    for(i=0;i<objColsIndex.length;i++)
-                    {
-                        var timeStore = getTimes(obj,objColsIndex[i]);
-                        var duration = moment.duration(timeStore.duration);
-                        
-                        console.dir('Old Time = '+ now.format());
-                        var newDate = now.add(duration);
-                        console.dir('New Time = '+ newDate.format());
-                    }
+                    var timeList = getListTimes(obj,objColsIndex);
                 }
                 //StoreType is provided
                 else
                 {
-                    //Need to add code for specific storetype
-
+                    var sType = [storeType,'DOP_'+storeType];
+                    //console.log(sType);
+                    var timeList = getListTimes(obj, sType);
                 }
-                             
-
-                //console.log("Time from TiemStore=" + timeStore['duration']);
-               
+                
+                // Time value store is obtained here...need to send it to database
+                //database call...
+               // console.log("Time from Time List=" + timeList);
             }
-            else
+            else // expDate is given by the user
             {
                 var duration = moment.duration(expDate);
                 var newDate = now.add(duration);
                 console.log('duration value = '+ newDate.format());
-                console.log('ISO string = '+ newDate.toISOString());
+                //console.log('ISO string = '+ newDate.toISOString());
             }
             
         } //jsonArray is valid
@@ -117,7 +113,7 @@ var handlers = {
         var speechOutput = "You can ask me to add, delete or update a food item and its expiry date for your pantry";
         var reprompt = "What can I help you with?";
         this.emit(':ask', speechOutput, reprompt);
-    },
+    },  
     'AMAZON.CancelIntent': function () {
         this.emit(':tell', 'Thanks for trying the Pantry Tracker. Good Bye!');
     },
@@ -126,72 +122,100 @@ var handlers = {
     }
 };
 
+function getListTimes(obj, arrayEntry)
+{
+    var now = moment();
+    var timeValueStore={};
+
+    for(var i=0; i<arrayEntry.length;i++)
+    {
+        var timeStore = getTimes(obj,arrayEntry[i]);
+        console.log('Time returned ='+timeStore);
+
+        // if time returned is not null
+        if(timeStore)
+        {
+            var duration = moment.duration(timeStore);
+            
+            console.dir('Old Time = '+ now.format());
+            var newDate = now.add(duration);
+
+            console.dir('New Time = '+ newDate.format());
+            timeValueStore[arrayEntry[i]] = newDate;
+
+            console.log(arrayEntry[i]+'='+timeValueStore[arrayEntry[i]].format());
+        }
+    
+    } //each entry in the array
+
+    return timeValueStore;   
+} //getListTimes
+
+
 //Look at the object and return object with times for refrigerate 
 function getTimes(obj, entryType)
 {
-    var timeObj ={};
-    console.dir(JSON.stringify(obj,null),{depth:null, colors:true});
+    var timeObject = null;
+    console.log('entryType='+entryType);
 
-    console.log('obj.Refrigerate_Min='+obj.Refrigerate_Min);
-
-    if((obj['Refrigerate_Min'] != 'null') && (obj['DOP_Refrigerate_Min'] != 'null'))
+   //user gave a entry type in query
+    if (entryType != null)
     {
+        var str = entryType+"_Max";
+        var metr = entryType+"_Metric";
 
-        console.log('came here');
+        var strr = obj[str];
+        var metrr = obj[metr];
 
-        var metric;
-        var max;
-        if(obj['Refrigerate_Min'])
+      //  console.log('Entered here '+strr +' and '+metrr);
+
+        //check if value is null. If not null convert to duration
+        if (strr)
         {
-            metric = obj['Refrigerate_Metric'];
-            max = obj['Refrigerate_Max'];
+            //console.log('Entered here--1'+strr);
+            var metric = getDuration(metrr);
+            timeObject = 'P'+strr+metric;
         }
-        else
-        {
-            metric = obj['DOP_Refrigerate_Metric'];
-            max = obj['DOP_Refrigerate_Max'];
-        }
+    }
+    //entryType is not provided. shouldnt come here at all.
+    else{
+        console.log('Error: EntryType is required to get value for expiry');
+    }
 
-        
-        var dateValue;
+    //console.log('TimeObject called in getTimes'+timeObject);
+
+    //return null or timeobject value
+    return timeObject;
+}//getTimes
+
+//get AMAZON.DURATION Value
+function getDuration(metric)
+{
+    var dateValue;
             
-        console.log(metric.toLowerCase());
+    console.log(metric.toLowerCase());
 
-
-        if(metric.toLowerCase() =='weeks')
-        {
-            dateValue = 'W';
-        }
-        else if (metric.toLowerCase() =='months')
-        {
-            dateValue = 'M';
-        }
-        else if (metric.toLowerCase() =='years')
-        {
-            dateValue = 'Y';
-        }
-        else if (metric.toLowerCase() == 'days')
-        {
-            dateValue = 'D';
-        }
-        else
-        {
-            dateValue ='';
-        }
-
-        //convert the time into duration and return the time
-        timeObj.duration = 'P'+max+dateValue;
-        console.log('new TimeObj value='+timeObj.duration);
-    }
-
-    if((obj['DOP_Refrigerate_Min'] === 'null') && (obj['Refrigerate_Min'] === 'null'))  
+    if(metric.toLowerCase() =='weeks')
     {
-           console.log('item not refrigeratable');
-
+        dateValue = 'W';
+    }
+    else if (metric.toLowerCase() =='months')
+    {
+        dateValue = 'M';
+    }
+    else if (metric.toLowerCase() =='years')
+    {
+        dateValue = 'Y';
+    }
+    else if (metric.toLowerCase() == 'days')
+    {
+        dateValue = 'D';
+    }
+    else
+    {
+        dateValue ='';
     }
 
-    console.log('timeObj = '+timeObj.duration);
-    return timeObj;
-}
+    return dateValue;
 
-//function get
+} //getDuration
