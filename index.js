@@ -44,7 +44,13 @@ var handlers = {
         var expDate = this.event.request.intent.slots.expDate.value;
         var storeType = this.event.request.intent.slots.storeType.value;
         var obj;
-       
+        var timeList ={};
+        var dbObj ={};
+        var uName = this.event.session.user.userId;
+        var un = uName.split('\.');
+
+        console.log(un[3]);
+
 
         console.log('Storetype === '+ storeType);
 
@@ -57,6 +63,12 @@ var handlers = {
 
         if (jsonArray)
         {
+            //Add user entries, date created etc. 
+            dbObj['USERID'] = un[3];
+            dbObj['dateCreated'] = moment.format();
+
+
+
             for(var i=0;i<jsonArray.maxRows;i++)
             {
                 if(foodItem.toLowerCase() === jsonArray.data[i].Name.toLowerCase())
@@ -71,6 +83,7 @@ var handlers = {
      
                         
             console.log(expDate);
+            timeList["storeType"]= storeType;
 
             // Expiry date is not provided by the user
             if (expDate === undefined)
@@ -78,29 +91,34 @@ var handlers = {
                 // StoreType is not provided
                 if(storeType === undefined)
                 {
-                    var timeList = getListTimes(obj,objColsIndex);
+                    timeList = getListTimes(obj,objColsIndex);
                 }
                 //StoreType is provided
                 else
                 {
                     var sType = [storeType,'DOP_'+storeType];
                     //console.log(sType);
-                    var timeList = getListTimes(obj, sType);
+                    timeList = getListTimes(obj, sType);
                 }
                 
                 // Time value store is obtained here...need to send it to database
                 //database call...
-               // console.log("Time from Time List=" + timeList);
+                // console.log("Time from Time List=" + timeList);
             }
             else // expDate is given by the user
             {
+                var now = moment();
                 var duration = moment.duration(expDate);
                 var newDate = now.add(duration);
                 console.log('duration value = '+ newDate.format());
                 //console.log('ISO string = '+ newDate.toISOString());
+
+                timeList["userAdded"]=newDate;
             }
+            console.dir(JSON.stringify(timeList,null),{depth:null,colors:true});
             
         } //jsonArray is valid
+
 
         //Speech output 
         var speechOutput = `${foodItem} added to yor list. Do you like to add anything else?`;
