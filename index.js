@@ -1,6 +1,7 @@
 'use strict';
 var Alexa = require('alexa-sdk');
 var moment = require('moment');
+var dbHelp = require('dbHelp.js');
 //var dynamoDb =require ('dynamodb-local');
 
 
@@ -59,15 +60,16 @@ var handlers = {
             //Here is the parsed text file in an array for food reference
             var jsonArray = require("./foodKeeper_minimal.json");
             arrayState = 'ACTIVE';
+
         }
 
         if (jsonArray)
         {
             //Add user entries, date created etc. 
             dbObj['USERID'] = un[3];
-            dbObj['dateCreated'] = moment.format();
-
-
+            dbObj['dateCreated'] = moment();
+            dbObj['foodItem'] = foodItem;
+            dbObj['storeType'] = storeType;
 
             for(var i=0;i<jsonArray.maxRows;i++)
             {
@@ -83,7 +85,7 @@ var handlers = {
      
                         
             console.log(expDate);
-            timeList["storeType"]= storeType;
+            //timeList["storeType"]= storeType;
 
             // Expiry date is not provided by the user
             if (expDate === undefined)
@@ -116,9 +118,31 @@ var handlers = {
                 timeList["userAdded"]=newDate;
             }
             console.dir(JSON.stringify(timeList,null),{depth:null,colors:true});
+
+            for(var attName in timeList)
+            {
+                dbObj[attName] = timeList[attName];
+            }
             
         } //jsonArray is valid
+        
+        console.dir(JSON.stringify(dbObj,null),{depth:null,colors:true});
 
+        console.log("calling the DB ...");
+        dbHelp.addFoodEntryDB(dbObj, (err, data)=>
+        {
+            if (!err)
+            {
+                console.dir('successfully added item to the db'+data);
+            }
+            else
+            {
+                console.dir('Issue adding item to the list');
+            }
+
+        });
+
+        setTimeout(null, 3000);
 
         //Speech output 
         var speechOutput = `${foodItem} added to yor list. Do you like to add anything else?`;
