@@ -1,7 +1,7 @@
 'use strict';
 var Alexa = require('alexa-sdk');
 var moment = require('moment');
-var dbHelp = require('dbHelp.js');
+//var dbHelp = require('dbHelp.js');
 //var dynamoDb =require ('dynamodb-local');
 
 
@@ -39,11 +39,13 @@ var handlers = {
         this.emit('AMAZON.HelpIntent');
     },
 
+    //TODO: Move addItem function to a seperate file
     'addItem': function () { // adding an item to the list
         
         var foodItem = this.event.request.intent.slots.foodItem.value;
         var expDate = this.event.request.intent.slots.expDate.value;
         var storeType = this.event.request.intent.slots.storeType.value;
+        //var storeType = 'Freeze';
         var obj;
         var timeList ={};
         var dbObj ={};
@@ -54,42 +56,83 @@ var handlers = {
 
 
         console.log('Storetype === '+ storeType);
+        console.log("Converted Time = " + timeConverter(Date.now()/1000));
+
+        //Add check to see if inputs are good
+        //If foodItem is null then return here itself
 
         if(arrayState === '')
         {
             //Here is the parsed text file in an array for food reference
             var jsonArray = require("./foodKeeper_minimal.json");
             arrayState = 'ACTIVE';
-
         }
 
         if (jsonArray)
         {
             //Add user entries, date created etc. 
             dbObj['USERID'] = un[3];
-            dbObj['dateCreated'] = moment();
+            dbObj['DateCreated'] = moment().get('Year')+'-'+moment().get('Month')+'-'+moment().get('Date');
             dbObj['foodItem'] = foodItem;
             dbObj['storeType'] = storeType;
 
+            console.log('Date='+ dbObj['DateCreated']);
+            //TODO: Move this to a seperate function
             for(var i=0;i<jsonArray.maxRows;i++)
             {
                 if(foodItem.toLowerCase() === jsonArray.data[i].Name.toLowerCase())
                 {
-                    console.log(`found the item ${foodItem} in the list`);
+                    console.log(`found the item ${foodItem} in the Name`);
                     obj = jsonArray.data[i];
                     break;
-                }
-            }
-
-            console.dir(JSON.stringify(obj,null),{depth:null, colors:true});
-     
-                        
-            console.log(expDate);
+                }//main name
+                // food item is not found in the name but it is present in the name_subtitle parameter
+                else if (jsonArray.data[i].Name_subtitle != null)
+                {
+                    //console.log('ST = '+ jsonArray.data[i].Name_subtitle);
+                    
+                    var nameSub = jsonArray.data[i].Name_subtitle.toLowerCase();
+                    var subtitle = nameSub.split(',');
+                    //console.log("ST len = "+ subtitle.length);
+                    
+                 
+                    for (var q=0; q<subtitle.length;q++)
+                    {
+                        //console.log(subtitle[q]);
+                        if (foodItem.toLowerCase() === subtitle[q])
+                        {
+                            console.log(`found the item ${foodItem} in the name_subtitle`);
+                            obj = jsonArray.data[q];
+                        }
+                    }
+                 
+                }//subtitle
+                
+            }//for list items in jsonarray
+                       
+            console.log("Expiry date coming from request = "+ expDate);
             //timeList["storeType"]= storeType;
 
+            //TODO: move expiryDate finder to a function    
             // Expiry date is not provided by the user
             if (expDate === undefined)
             {
+                // if ExpiryDate is not given by user then we need to find it from the JsonArray
+                // If JsonArray didnt return an object then we will need user guidance on expiryDate
+                // Prompt response back to the user
+                if (obj != null)
+                {
+                    console.dir(JSON.stringify(obj,null),{depth:null, colors:true});
+                }
+                else
+                {
+                  var speechOutput = `How long would you like to store the ${foodItem}?`;
+                  var reprompt = "Please specify an expiry date";
+                  var content = `Please specify an expiry date for the ${foodItem}`;
+
+                  this.emit(':askWithCard', speechOutput, reprompt, SKILL_NAME,content);
+                }
+
                 // StoreType is not provided
                 if(storeType === undefined)
                 {
@@ -99,13 +142,27 @@ var handlers = {
                 else
                 {
                     var sType = [storeType,'DOP_'+storeType];
-                    //console.log(sType);
+                    //console.log(sType[1]);
                     timeList = getListTimes(obj, sType);
-                }
-                
-                // Time value store is obtained here...need to send it to database
-                //database call...
-                // console.log("Time from Time List=" + timeList);
+                    var dVal;
+
+                    if (timeList[0] == "null")
+                    {
+                        dVal = timeList[sType[1]];
+                        
+                    }
+                    else
+                    {
+                       dVal = timeList[sType[0]];
+                    }
+                    //console.log('value here is what???'+dVal.toString().substr(0,10));
+                    console.log('value here is what???'+dVal.toString());
+                    dbObj['expDate'] = dVal.toString().substr(0,10);
+
+                    
+                }//storeType is provided by user
+               
+
             }
             else // expDate is given by the user
             {
@@ -113,11 +170,11 @@ var handlers = {
                 var duration = moment.duration(expDate);
                 var newDate = now.add(duration);
                 console.log('duration value = '+ newDate.format());
-                //console.log('ISO string = '+ newDate.toISOString());
+                console.log('date user specified = '+ newDate);
 
                 timeList["userAdded"]=newDate;
             }
-            console.dir(JSON.stringify(timeList,null),{depth:null,colors:true});
+            console.dir("Yp..."+JSON.stringify(timeList,null),{depth:null,colors:true});
 
             for(var attName in timeList)
             {
@@ -128,7 +185,7 @@ var handlers = {
         
         console.dir(JSON.stringify(dbObj,null),{depth:null,colors:true});
 
-        console.log("calling the DB ...");
+/*        console.log("calling the DB ...");
         dbHelp.addFoodEntryDB(dbObj, (err, data)=>
         {
             if (!err)
@@ -137,14 +194,18 @@ var handlers = {
             }
             else
             {
-                console.dir('Issue adding item to the list');
+                console.dir('Issue adding item to the list '+ err);
             }
 
-        });
-
-        setTimeout(null, 3000);
-
         //Speech output 
+        var speechOutput = `${foodItem} added to yor list. Do you like to add anything else?`;
+        var reprompt = "Do you like to add anything else?";
+        var content = `Item ${foodItem} added to the list with expiry ${expDate}`;
+
+        this.emit(':askWithCard', speechOutput, reprompt, SKILL_NAME,content);
+        });
+*/
+
         var speechOutput = `${foodItem} added to yor list. Do you like to add anything else?`;
         var reprompt = "Do you like to add anything else?";
         var content = `Item ${foodItem} added to the list with expiry ${expDate}`;
@@ -261,3 +322,16 @@ function getDuration(metric)
     return dateValue;
 
 } //getDuration
+
+function timeConverter(UNIX_timestamp){
+  var a = new Date(UNIX_timestamp * 1000);
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var year = a.getFullYear();
+  var month = a.getMonth();
+  var date = a.getDate();
+  var hour = a.getHours();
+  var min = a.getMinutes();
+  var sec = a.getSeconds();
+  var time = year + '-' + month + '-' + month + 'T' + hour + ':' + min + ':' + sec ;
+  return time;
+}
