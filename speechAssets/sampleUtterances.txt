@@ -1,25 +1,64 @@
-addItem add {foodItem} to the tracker
-addItem add {foodItem} to the list
-addItem add a new item for {foodItem} expiring in {expDate}
-addItem create a new list for {foodItem}
-addItem create a new list for {foodItem} expiring in {expDate}
-addItem create a new list for {foodItem} with expiry {expDate}
+addItem add {foodItem} to the {storeType}
+addItem add {foodItem} to the {storeType} for {expDate}
+addItem add {foodItem} {storeType} {expDate}
+
+addItem add {foodItem} to {storeType}
+addItem add {foodItem} to {storeType} for {expDate}
+
+addItem add {foodItem} for {expDate}
+addItem add {foodItem} for {expDate} to {storeType}
+addItem add {foodItem} {expDate} {storeType}
+
+addItem add {foodItem} and expiry {expDate}
+addItem add {foodItem} and expiry {expDate} to {storeType}
+
+addItem add {foodItem} to {storeType} with {expDate}
+addItem add {foodItem} to {storeType} for {expDate}
 
 getItem get foods expiring {expDate}
 getItem get items expiring {expDate}
+getItem get expiring items for {expDate}
 getItem get {foodItem} expiry
 getItem tell {foodItem} expiry
-
+getItem get expiry for {foodItem}
+getItem get expiry date for {foodItem} 
+getItem get {foodItem} expiry
+getItem get {foodItem} expiry date
 
 delList clear all entries
 delList remove all entries
 delList delete all entries
 delList reset all entries
+delList reset pantry
+delList reset everything
 
+delList clear all
+delList clear everything
+delList clear all entries
+delList clear pantry
+delList clear all pantry items
+delList clear all items
 
-delItem remove {foodItem} from list
+delList remove all
+delList remove everything
+delList remove all entries
+delList remove pantry
+delList remove all pantry items
+delList remove all items
+
+delList reset all
+delList reset everything
+delList reset all entries
+delList reset pantry
+delList reset all pantry items
+delList reset all items
+
+delItem remove {foodItem} from pantry
 delItem remove {foodItem}
+delItem remove {foodItem} from list
+delItem delete {foodItem} from pantry
 delItem delete {foodItem} from list
 delItem delete {foodItem}
+delItem clear {foodItem} from pantry
+delItem clear {foodItem} 
 delItem clear {foodItem} from list
-delItem clear {foodItem}
