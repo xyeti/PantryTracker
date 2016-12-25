@@ -75,19 +75,20 @@ var handlers = {
             dbObj['foodItem'] = foodItem;
             dbObj['storeType'] = storeType;
 
-            console.log('Date='+ dbObj['DateCreated']);
+            //console.log('Date='+ dbObj['DateCreated']);
             //TODO: Move this to a seperate function
             for(var i=0;i<jsonArray.maxRows;i++)
             {
                 if(foodItem.toLowerCase() === jsonArray.data[i].Name.toLowerCase())
                 {
-                    console.log(`found the item ${foodItem} in the Name`);
+                    console.log(`found the item ${foodItem} by Name`);
                     obj = jsonArray.data[i];
                     break;
                 }//main name
                 // food item is not found in the name but it is present in the name_subtitle parameter
                 else if (jsonArray.data[i].Name_subtitle != null)
                 {
+
                     //console.log('ST = '+ jsonArray.data[i].Name_subtitle);
                     
                     var nameSub = jsonArray.data[i].Name_subtitle.toLowerCase();
@@ -100,7 +101,7 @@ var handlers = {
                         //console.log(subtitle[q]);
                         if (foodItem.toLowerCase() === subtitle[q])
                         {
-                            console.log(`found the item ${foodItem} in the name_subtitle`);
+                            console.log(`found the item ${foodItem} from name_subtitle`);
                             obj = jsonArray.data[q];
                         }
                     }
@@ -109,7 +110,7 @@ var handlers = {
                 
             }//for list items in jsonarray
                        
-            console.log("Expiry date coming from request = "+ expDate);
+            //console.log("Expiry date coming from request = "+ expDate);
             //timeList["storeType"]= storeType;
 
             //TODO: move expiryDate finder to a function    
@@ -136,45 +137,77 @@ var handlers = {
                 if(storeType === undefined)
                 {
                     timeList = getListTimes(obj,objColsIndex);
-                    for(var attName in timeList)
-                     {
-                        dbObj['exp_'+attName] = timeList[attName].format('YYYY-MM-DD');
-                     }
+                    if(timeList)
+                    {
+                        for(var attName in timeList)
+                         {
+                            dbObj['exp_'+attName] = timeList[attName].format('YYYY-MM-DD');
+                         }
 
-                    //console.dir("Yp3..."+JSON.stringify(timeList,null),{depth:null,colors:true});
-                    dbObj['expDate'] = getExpiryFromList(timeList);
-                    
+                        //console.dir("Yp3..."+JSON.stringify(timeList,null),{depth:null,colors:true});
+                        dbObj['expDate'] = getExpiryFromList(timeList);
+                    } //if Value of timelist is not null
+                    else
+                    {
+                        //Found an object with name but timelist is null???
+                        //Send response to user asking for more info.
+                        var speechOutput = `How long would you like to store the ${foodItem}?`;
+                        var reprompt = "Please specify an expiry date";
+                        var content = `Please specify an expiry date for the ${foodItem}`;
+                        this.emit(':askWithCard', speechOutput, reprompt, SKILL_NAME,content);
+
+                        //Will need to package the current work so that we can continue from user response
+                        //Next steps
+                    }
+                   
                 }
                 //StoreType is provided
                 else
                 {
                     var sType = [storeType,'DOP_'+storeType];
-                    //console.log(sType[1]);
+                    //console.log(sType);
                     timeList = getListTimes(obj, sType);
-                    var dVal;
 
-                    if (timeList[0] == "null")
+                    var dVal;
+                    //console.dir("Yp..."+JSON.stringify(timeList,null),{depth:null,colors:true});    
+
+                    if (timeList)
                     {
-                        dVal = timeList[sType[1]];
-                        dbObj['exp_'+sType[1]] = dVal.format('YYYY-MM-DD');
-                        
+                        if (timeList[0] == "null")
+                        {
+                            dVal = timeList[sType[1]];
+                            dbObj['exp_'+sType[1]] = dVal.format('YYYY-MM-DD');
+                            
+                        }
+                        else
+                        {
+                           dVal = timeList[sType[0]];
+                           dbObj['exp_'+sType[0]] = dVal.format('YYYY-MM-DD');
+                        }
+                        //console.log('value here is what#1???'+dVal.format('YYYY-MM-DD'));
+                        //console.log('value here is what???'+ moment(dVal).get('Year')+'-'+moment(dVal).get('Month')+'-'+moment(dVal).get('Date'));
+                        //dbObj['expDate'] = moment(dVal).get('Year')+'-'+moment(dVal).get('Month')+'-'+moment(dVal).get('Date');
+                        dbObj['expDate'] = dVal.format('YYYY-MM-DD');
                     }
                     else
                     {
-                       dVal = timeList[sType[0]];
-                       dbObj['exp_'+sType[0]] = dVal.format('YYYY-MM-DD');
-                    }
-                    console.log('value here is what#1???'+dVal.format('YYYY-MM-DD'));
-                    //console.log('value here is what???'+ moment(dVal).get('Year')+'-'+moment(dVal).get('Month')+'-'+moment(dVal).get('Date'));
-                    //dbObj['expDate'] = moment(dVal).get('Year')+'-'+moment(dVal).get('Month')+'-'+moment(dVal).get('Date');
-                    dbObj['expDate'] = dVal.format('YYYY-MM-DD');
+                        //Found an object with name but timelist is null???
+                        //Send response to user asking for more info.
+                        var speechOutput = `How long would you like to store the ${foodItem}?`;
+                        var reprompt = "Please specify an expiry date";
+                        var content = `Please specify an expiry date for the ${foodItem}`;
+                        this.emit(':askWithCard', speechOutput, reprompt, SKILL_NAME,content);
 
-       
+                        //Will need to package the current work so that we can continue from user response
+                        //Next steps
+                    }
+                
                 }//storeType is provided by user
 
-            }
-            else // expDate is given by the user
+            } //expiryDate not given by user
+            else 
             {
+                // expDate is given by the user
                 var now = moment();
                 var duration = moment.duration(expDate);
                 var newDate = now.add(duration);
@@ -186,13 +219,15 @@ var handlers = {
                 dbObj['expDate'] = newDate.format("YYYY-MM-DD");
                 dbObj['exp_userAdded'] = timeList['userAdded'];
             }
-            console.dir("Yp..."+JSON.stringify(timeList,null),{depth:null,colors:true});
+            //console.dir("Yp..."+JSON.stringify(timeList,null),{depth:null,colors:true});
 
         } //jsonArray is valid
         
         console.dir(JSON.stringify(dbObj,null),{depth:null,colors:true});
 
-/*        console.log("calling the DB ...");
+        //Success...found obj in list. found expDates and items
+/*
+        console.log("calling the DB ...");
         dbHelp.addFoodEntryDB(dbObj, (err, data)=>
         {
             if (!err)
@@ -211,8 +246,9 @@ var handlers = {
 
         this.emit(':askWithCard', speechOutput, reprompt, SKILL_NAME,content);
         });
-*/
 
+*/
+        
         var speechOutput = `${foodItem} added to yor list. Do you like to add anything else?`;
         var reprompt = "Do you like to add anything else?";
         var content = `Item ${foodItem} added to the list with expiry ${expDate}`;
@@ -241,7 +277,7 @@ function getListTimes(obj, arrayEntry)
     {
         //console.log("getListtimes: Val sent is "+i+" and "+arrayEntry[i]);
         var timeStore = getTimes(obj,arrayEntry[i]);
-      //  console.log('Time returned in getListTimes='+timeStore);
+        //console.log('Time returned in getListTimes='+timeStore);
 
         // if time returned is not null
         if(timeStore)
@@ -249,10 +285,10 @@ function getListTimes(obj, arrayEntry)
             var now = moment();
             var duration = moment.duration(timeStore);
             
-        //  console.dir('Old Time = '+ now.format());
+          //  console.dir('Old Time = '+ now.format());
             var newDate = now.add(duration);
 
-        //  console.dir('New Time = '+ newDate.format());
+          //  console.dir('New Time = '+ newDate.format());
             timeValueStore[arrayEntry[i]] = newDate;
 
             //console.log(arrayEntry[i]+': value currently in timeValueStore'+timeValueStore[arrayEntry[i]].format());
@@ -261,7 +297,7 @@ function getListTimes(obj, arrayEntry)
     
     } //each entry in the array
 
-    //console.dir(JSON.stringify(timeValueStore,null),{depth:null,colors:false});
+   //console.dir(JSON.stringify(timeValueStore,null),{depth:null,colors:false});
     return timeValueStore;   
 } //getListTimes
 

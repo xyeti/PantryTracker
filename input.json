@@ -20,11 +20,11 @@
       "slots": {
         "storeType": {
           "name": "storeType",
-          "value": "freezer"
-        },
+          "value":"Freeze"
+         },
         "foodItem": {
           "name": "foodItem",
-          "value": "potatoes"
+          "value": "bananas"
         },
         "expDate": {
           "name": "expDate"
