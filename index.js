@@ -56,8 +56,7 @@ var handlers = {
 
 
         console.log('Storetype === '+ storeType);
-        console.log("Converted Time = " + timeConverter(Date.now()/1000));
-
+        
         //Add check to see if inputs are good
         //If foodItem is null then return here itself
 
@@ -137,6 +136,14 @@ var handlers = {
                 if(storeType === undefined)
                 {
                     timeList = getListTimes(obj,objColsIndex);
+                    for(var attName in timeList)
+                     {
+                        dbObj['exp_'+attName] = timeList[attName].format('YYYY-MM-DD');
+                     }
+
+                    //console.dir("Yp3..."+JSON.stringify(timeList,null),{depth:null,colors:true});
+                    dbObj['expDate'] = getExpiryFromList(timeList);
+                    
                 }
                 //StoreType is provided
                 else
@@ -149,19 +156,21 @@ var handlers = {
                     if (timeList[0] == "null")
                     {
                         dVal = timeList[sType[1]];
+                        dbObj['exp_'+sType[1]] = dVal.format('YYYY-MM-DD');
                         
                     }
                     else
                     {
                        dVal = timeList[sType[0]];
+                       dbObj['exp_'+sType[0]] = dVal.format('YYYY-MM-DD');
                     }
-                    //console.log('value here is what???'+dVal.toString().substr(0,10));
-                    console.log('value here is what???'+dVal.toString());
-                    dbObj['expDate'] = dVal.toString().substr(0,10);
+                    console.log('value here is what#1???'+dVal.format('YYYY-MM-DD'));
+                    //console.log('value here is what???'+ moment(dVal).get('Year')+'-'+moment(dVal).get('Month')+'-'+moment(dVal).get('Date'));
+                    //dbObj['expDate'] = moment(dVal).get('Year')+'-'+moment(dVal).get('Month')+'-'+moment(dVal).get('Date');
+                    dbObj['expDate'] = dVal.format('YYYY-MM-DD');
 
-                    
+       
                 }//storeType is provided by user
-               
 
             }
             else // expDate is given by the user
@@ -169,18 +178,16 @@ var handlers = {
                 var now = moment();
                 var duration = moment.duration(expDate);
                 var newDate = now.add(duration);
-                console.log('duration value = '+ newDate.format());
-                console.log('date user specified = '+ newDate);
 
-                timeList["userAdded"]=newDate;
+                //console.log('date user specified = '+ newDate);
+                console.log('duration value specified by user = '+ newDate.format("YYYY-MM-DD"));
+                
+                timeList["userAdded"]=newDate.format("YYYY-MM-DD");
+                dbObj['expDate'] = newDate.format("YYYY-MM-DD");
+                dbObj['exp_userAdded'] = timeList['userAdded'];
             }
             console.dir("Yp..."+JSON.stringify(timeList,null),{depth:null,colors:true});
 
-            for(var attName in timeList)
-            {
-                dbObj[attName] = timeList[attName];
-            }
-            
         } //jsonArray is valid
         
         console.dir(JSON.stringify(dbObj,null),{depth:null,colors:true});
@@ -227,30 +234,34 @@ var handlers = {
 
 function getListTimes(obj, arrayEntry)
 {
-    var now = moment();
     var timeValueStore={};
+    
 
     for(var i=0; i<arrayEntry.length;i++)
     {
+        //console.log("getListtimes: Val sent is "+i+" and "+arrayEntry[i]);
         var timeStore = getTimes(obj,arrayEntry[i]);
-        console.log('Time returned ='+timeStore);
+      //  console.log('Time returned in getListTimes='+timeStore);
 
         // if time returned is not null
         if(timeStore)
         {
+            var now = moment();
             var duration = moment.duration(timeStore);
             
-            console.dir('Old Time = '+ now.format());
+        //  console.dir('Old Time = '+ now.format());
             var newDate = now.add(duration);
 
-            console.dir('New Time = '+ newDate.format());
+        //  console.dir('New Time = '+ newDate.format());
             timeValueStore[arrayEntry[i]] = newDate;
 
-            console.log(arrayEntry[i]+'='+timeValueStore[arrayEntry[i]].format());
+            //console.log(arrayEntry[i]+': value currently in timeValueStore'+timeValueStore[arrayEntry[i]].format());
+            //console.dir("Array value now "+JSON.stringify(timeValueStore,null),{depth:null,colors:false});            
         }
     
     } //each entry in the array
 
+    //console.dir(JSON.stringify(timeValueStore,null),{depth:null,colors:false});
     return timeValueStore;   
 } //getListTimes
 
@@ -259,7 +270,7 @@ function getListTimes(obj, arrayEntry)
 function getTimes(obj, entryType)
 {
     var timeObject = null;
-    console.log('entryType='+entryType);
+    //console.log('entryType='+entryType);
 
    //user gave a entry type in query
     if (entryType != null)
@@ -296,7 +307,7 @@ function getDuration(metric)
 {
     var dateValue;
             
-    console.log(metric.toLowerCase());
+    //console.log(metric.toLowerCase());
 
     if(metric.toLowerCase() =='weeks')
     {
@@ -323,15 +334,37 @@ function getDuration(metric)
 
 } //getDuration
 
-function timeConverter(UNIX_timestamp){
-  var a = new Date(UNIX_timestamp * 1000);
-  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var year = a.getFullYear();
-  var month = a.getMonth();
-  var date = a.getDate();
-  var hour = a.getHours();
-  var min = a.getMinutes();
-  var sec = a.getSeconds();
-  var time = year + '-' + month + '-' + month + 'T' + hour + ':' + min + ':' + sec ;
-  return time;
+
+// Entries are : 'Pantry','DOP_Pantry','Refrigerate','DOP_Refrigerate','Freeze','DOP_Freeze'
+// Order of priority: Refrigerate, DOP_Refrigerate,Pantry, DOP_PAntry, Freeze, DOP_Freeze
+
+function getExpiryFromList(list)
+{
+    var min;
+    if (list['Refrigerate'] != null)
+    {
+        min = list['Refrigerate'];
+    }
+    else if (list['DOP_Refrigerate'] != null)
+    {
+        min = list['Refrigerate'];   
+    }
+    else if (list['Pantry'] != null)
+    {
+        min = list['Pantry'];   
+    }
+    else if (list['DOP_Pantry'] != null)
+    {
+        min = list['Pantry'];   
+    }
+    else if (list['Freeze'] != null)
+    {
+        min = list['Freeze'];   
+    }
+    else
+    {
+        min = list['DOP_Freeze'];
+    }
+
+    return min.format('YYYY-MM-DD');
 }
