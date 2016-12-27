@@ -1,8 +1,8 @@
 'use strict';
 var Alexa = require('alexa-sdk');
 var moment = require('moment');
-//var dbHelp = require('dbHelp.js');
-//var dynamoDb =require ('dynamodb-local');
+var dbHelp = require('dbHelp.js');
+var dynamoDb =require ('dynamodb-local');
 
 
 
@@ -41,10 +41,15 @@ var handlers = {
 
     //TODO: Move addItem function to a seperate file
     'addItem': function () { // adding an item to the list
-        
+
         var foodItem = this.event.request.intent.slots.foodItem.value;
         var expDate = this.event.request.intent.slots.expDate.value;
         var storeType = this.event.request.intent.slots.storeType.value;
+
+        var eventObj = this.event;
+        var mythis = this;
+        console.dir(JSON.stringify(this,null),{depth:null,colors:true});
+
         //var storeType = 'Freeze';
         var obj;
         var timeList ={};
@@ -225,35 +230,11 @@ var handlers = {
         
         console.dir(JSON.stringify(dbObj,null),{depth:null,colors:true});
 
-        //Success...found obj in list. found expDates and items
-/*
+        //Success...Linear progress...found obj in list, found expDates and items
+
         console.log("calling the DB ...");
-        dbHelp.addFoodEntryDB(dbObj, (err, data)=>
-        {
-            if (!err)
-            {
-                console.dir('successfully added item to the db'+data);
-            }
-            else
-            {
-                console.dir('Issue adding item to the list '+ err);
-            }
+        postDB(dbObj,eventObj,mythis);
 
-        //Speech output 
-        var speechOutput = `${foodItem} added to yor list. Do you like to add anything else?`;
-        var reprompt = "Do you like to add anything else?";
-        var content = `Item ${foodItem} added to the list with expiry ${expDate}`;
-
-        this.emit(':askWithCard', speechOutput, reprompt, SKILL_NAME,content);
-        });
-
-*/
-        
-        var speechOutput = `${foodItem} added to yor list. Do you like to add anything else?`;
-        var reprompt = "Do you like to add anything else?";
-        var content = `Item ${foodItem} added to the list with expiry ${expDate}`;
-
-        this.emit(':askWithCard', speechOutput, reprompt, SKILL_NAME,content);
     },
     'AMAZON.HelpIntent': function () {
         var speechOutput = "You can ask me to add, delete or update a food item and its expiry date for your pantry";
@@ -404,3 +385,38 @@ function getExpiryFromList(list)
 
     return min.format('YYYY-MM-DD');
 }
+
+function postDB (dbObject, eventObj, mythis)
+{
+    //TODO: check if table is present
+    //Generally dont have to check...
+    var foodItem = eventObj.request.intent.slots.foodItem.value;
+    var expDate = dbObject.expDate;
+ 
+    dbHelp.addFoodEntryDB(dbObject, (err, data)=>
+    {
+
+        //console.dir('eventObject=' + JSON.stringify(eventObj,null),{depth:null,colors:false});
+
+     //   var foodItem = reqObj.event.request.intent.slots.foodItem.value;
+            if (!err)
+            {
+                console.dir('successfully added item to the db'+JSON.stringify(data,null));
+                //Speech output 
+                var speechOutput = `${foodItem} added to yor list. Do you like to add anything else?`;
+                var reprompt = "Do you like to add anything else?";
+                var content = `Item ${foodItem} added to the list with expiry ${expDate}`;
+
+                mythis.emit(':askWithCard', speechOutput, reprompt, SKILL_NAME,content);
+            }
+            else
+            {
+                console.dir('Issue adding item to the list '+ err);
+            }
+
+            
+    } //callback
+    );
+}
+
+
