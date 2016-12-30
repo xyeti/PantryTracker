@@ -1,4 +1,5 @@
 'use strict';
+
 var Alexa = require('alexa-sdk');
 var moment = require('moment');
 var dbHelp = require('dbHelp.js');
@@ -17,6 +18,8 @@ var APP_ID = "amzn1.ask.skill.6922232e-c449-4b18-b8a6-ad699ef2182a";
 var SKILL_NAME = 'Pantry Tracker';
 
 var arrayState = '';
+
+var expDateNormal = "True";
 
 /**
  * Array containing Pantry items, expiry and refrigeration status
@@ -150,7 +153,10 @@ var handlers = {
                          }
 
                         //console.dir("Yp3..."+JSON.stringify(timeList,null),{depth:null,colors:true});
-                        dbObj['expDate'] = getExpiryFromList(timeList);
+                        var unixtime = getExpiryFromList(timeList);
+                        dbObj['expDate'] = Math.floor(moment(unixtime).unix()/1000);
+                        console.log("unixtime="+dbObj['expDate']);
+
                     } //if Value of timelist is not null
                     else
                     {
@@ -174,13 +180,18 @@ var handlers = {
                     timeList = getListTimes(obj, sType);
 
                     var dVal;
-                    //console.dir("Yp..."+JSON.stringify(timeList,null),{depth:null,colors:true});    
+                    console.dir("Yp..."+JSON.stringify(timeList,null),{depth:null,colors:true});    
 
                     if (timeList)
                     {
+                        var objArr = Object.keys(timeList);
+                         dVal = timeList[objArr[0]];
+                         dbObj['exp_'+objArr[0]] = dVal.format('YYYY-MM-DD');
+                        
+                        /*         
                         if (timeList[0] == "null")
                         {
-                            dVal = timeList[sType[1]];
+                            dVal = timeList[sType[0]];
                             dbObj['exp_'+sType[1]] = dVal.format('YYYY-MM-DD');
                             
                         }
@@ -188,11 +199,19 @@ var handlers = {
                         {
                            dVal = timeList[sType[0]];
                            dbObj['exp_'+sType[0]] = dVal.format('YYYY-MM-DD');
-                        }
+                        }*/
+
+
                         //console.log('value here is what#1???'+dVal.format('YYYY-MM-DD'));
                         //console.log('value here is what???'+ moment(dVal).get('Year')+'-'+moment(dVal).get('Month')+'-'+moment(dVal).get('Date'));
                         //dbObj['expDate'] = moment(dVal).get('Year')+'-'+moment(dVal).get('Month')+'-'+moment(dVal).get('Date');
-                        dbObj['expDate'] = dVal.format('YYYY-MM-DD');
+                        //dbObj['expDate'] = dVal.format('YYYY-MM-DD');
+
+                        console.log("dVal = "+dVal);
+                        dbObj['expDate'] = Math.floor(moment(dVal).unix()/1000);
+                        
+                        //var unixtime = moment(dbObj[expDate]).unix()/1000;
+                        console.log("unixtime="+dbObj['expDate']);
                     }
                     else
                     {
@@ -221,7 +240,9 @@ var handlers = {
                 console.log('duration value specified by user = '+ newDate.format("YYYY-MM-DD"));
                 
                 timeList["userAdded"]=newDate.format("YYYY-MM-DD");
-                dbObj['expDate'] = newDate.format("YYYY-MM-DD");
+                //dbObj['expDate'] = newDate.format("YYYY-MM-DD");
+
+                dbObj['expDate'] = Math.floor(moment(newDate).unix()/1000);
                 dbObj['exp_userAdded'] = timeList['userAdded'];
             }
             //console.dir("Yp..."+JSON.stringify(timeList,null),{depth:null,colors:true});
@@ -229,11 +250,46 @@ var handlers = {
         } //jsonArray is valid
         
         console.dir(JSON.stringify(dbObj,null),{depth:null,colors:true});
+        //console.dir(dbObj);
 
         //Success...Linear progress...found obj in list, found expDates and items
 
         console.log("calling the DB ...");
         postDB(dbObj,eventObj,mythis);
+
+    },
+    'getItem': function()
+    {
+        var foodItem = this.event.request.intent.slots.foodItem.value;
+        var expDate = this.event.request.intent.slots.expDate.value;
+        var uName = this.event.session.user.userId;
+        var USERID = uName.split('\.');
+
+        var dbObj={};
+        dbObj['USERID'] = USERID;
+
+        
+        //retriving expiry for food items by name and time
+        if (expDate)
+        {
+            //Query with the user id
+            var now = moment();
+            var duration = moment.duration(expDate);
+            
+            console.dir('Old Time = '+ now.format());
+            var newDate = now.add(duration);
+            console.log('New Time = '+ Math.floor(newDate/1000000));
+          
+
+        }
+        else
+        {
+            //else Expiry date is not given by user. Assume it is today
+            var date = Math.floor(moment().unix()/1000);
+            console.log('New Time = '+ JSON.stringify(date,null));
+             
+            
+        }
 
     },
     'AMAZON.HelpIntent': function () {
@@ -268,10 +324,10 @@ function getListTimes(obj, arrayEntry)
             
           //  console.dir('Old Time = '+ now.format());
             var newDate = now.add(duration);
+           //console.log('New Time = '+ newDate);
 
-          //  console.dir('New Time = '+ newDate.format());
             timeValueStore[arrayEntry[i]] = newDate;
-
+            
             //console.log(arrayEntry[i]+': value currently in timeValueStore'+timeValueStore[arrayEntry[i]].format());
             //console.dir("Array value now "+JSON.stringify(timeValueStore,null),{depth:null,colors:false});            
         }
@@ -279,6 +335,7 @@ function getListTimes(obj, arrayEntry)
     } //each entry in the array
 
    //console.dir(JSON.stringify(timeValueStore,null),{depth:null,colors:false});
+   //console.dir("timeValueStore =" + timeValueStore);
     return timeValueStore;   
 } //getListTimes
 
@@ -383,7 +440,8 @@ function getExpiryFromList(list)
         min = list['DOP_Freeze'];
     }
 
-    return min.format('YYYY-MM-DD');
+    //return min.format('YYYY-MM-DD');
+    return min;
 }
 
 function postDB (dbObject, eventObj, mythis)

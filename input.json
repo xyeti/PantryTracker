@@ -16,18 +16,14 @@
     "locale": "en-US",
     "timestamp": "2016-11-30T15:01:53Z",
     "intent": {
-      "name": "addItem",
+      "name": "getItem",
       "slots": {
-        "storeType": {
-          "name": "storeType",
-          "value":"Freeze"
-         },
         "foodItem": {
-          "name": "foodItem",
-          "value": "bananas"
-        },
+          "name": "foodItem"
+         },
         "expDate": {
-          "name": "expDate"
+          "name": "expDate",
+          "value": "P1W"
         }
       }
     }
