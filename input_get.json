@@ -1,0 +1,32 @@
+{
+  "session": {
+    "sessionId": "SessionId.56159dab-1a19-49bd-8a2a-14f09effb1b4",
+    "application": {
+      "applicationId": "amzn1.ask.skill.6922232e-c449-4b18-b8a6-ad699ef2182a"
+    },
+    "attributes": {},
+    "user": {
+      "userId": "amzn1.ask.account.AGMPJGLV3KK5AMXQDIIHLGISVFMO5KRCBHJLCM5QCHOAI5V6R22JGVF5B6TFXZDXRMX5GTIE2ANPI373YIJXN43XORR66XEJQ4EBFW4XGQPSKSIO6M4HXNBO4XEVHX4S6J7MWDPMEOGJDWP46FM5WDEIIV3N3FI77XNKBZOS7JHK3X673RYOOYWBH4LRKH6NUDVHE6YBR7IU36Y"
+    },
+    "new": true
+  },
+  "request": {
+    "type": "IntentRequest",
+    "requestId": "EdwRequestId.13e019f1-4bd7-475a-bf5b-fb3149159faa",
+    "locale": "en-US",
+    "timestamp": "2017-01-07T15:10:41Z",
+    "intent": {
+      "name": "getItem",
+      "slots": {
+        "foodItem": {
+          "name": "foodItem"
+        },
+        "expDate": {
+          "name": "expDate",
+          "value": "P2W"
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

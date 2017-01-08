@@ -18,18 +18,18 @@ function createTable(TableName, params, callback)
 		TableName : `${TableName}`
 	};
 	var tableList;
-	console.log('going to check table');
+	//console.log('going to check table');
 	
 	 checkTable(TableName, (tableStatus)=>{
-	 	console.dir('Inside createTable callback'+tableStatus.name+tableStatus.status);
+	 //	console.dir('Inside createTable callback'+tableStatus.name+tableStatus.status);
 	 	if (tableStatus.status === 'ACTIVE')
 	 	{
-	 		console.log('#22 Table already present');
+	 	//	console.log('#22 Table already present');
 	 		callback(null, tableStatus);
 	 	}
 	 	else
 	 	{
-	 		console.log('Table not there..starting new');
+	 	//	console.log('Table not there..starting new');
 	 		dynamodb.createTable(params, callback);
 	 	}
 	 });	
@@ -46,21 +46,21 @@ function checkTable(TableName, callback)
 		else
 		{	
 			tableList = data.TableNames;
-			console.log('inside list table --1');
+		//	console.log('inside list table --1');
 			if(tableList)
 			{
-				console.log('inside list table--2'+tableList);
+		//		console.log('inside list table--2'+tableList);
 				tableList.forEach((item)=>{
 					if (item == TableName)
 					{
-						console.log('Table present; exit');
+		//				console.log('Table present; exit');
 						tableStatus.name = TableName;
 						tableStatus.status = 'ACTIVE';
-						console.dir('3355 Inside checkTable callback '+tableStatus.name+tableStatus.status);
+		//				console.dir('3355 Inside checkTable callback '+tableStatus.name+tableStatus.status);
 					}
 									
 				});
-				console.dir('333 Inside checkTable callback '+tableStatus.name+tableStatus.status);
+		//		console.dir('333 Inside checkTable callback '+tableStatus.name+tableStatus.status);
 				callback(tableStatus);
 			}
 	
@@ -69,7 +69,7 @@ function checkTable(TableName, callback)
 
 
 var params = {
-TableName : "saaapadu",
+TableName : "PantryTracker",
 KeySchema: [
 	{ AttributeName: "USERID", KeyType: "HASH"}, //Partition key
 	{ AttributeName: "DateCreated", KeyType: "RANGE" } //Sort key
@@ -129,3 +129,5 @@ createTable('saaapadu', params, (err, data)=>{
 		console.dir(err);
 	}
 });
+
+export(databaseHelper.js);

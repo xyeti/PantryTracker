@@ -16,15 +16,21 @@
     "locale": "en-US",
     "timestamp": "2016-11-30T15:01:53Z",
     "intent": {
-      "name": "getItem",
+      "name": "addItem",
       "slots": {
         "foodItem": {
-          "name": "foodItem"
+          "name": "foodItem",
+          "value":"Cucumbers"
          },
         "expDate": {
-          "name": "expDate",
-          "value": "P1W"
+          "name": "expDate"
+          
+        },
+        "storeType":{
+          "name":"storeType",
+          "value":"Refrigerate"
         }
+
       }
     }
   },

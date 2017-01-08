@@ -79,9 +79,11 @@ var handlers = {
         {
             //Add user entries, date created etc. 
             dbObj['USERID'] = un[3];
-            dbObj['DateCreated'] = moment().get('Year')+'-'+moment().get('Month')+'-'+moment().get('Date');
+            dbObj['DateCreated'] = `${moment().get('Year')}`+`${(moment().get('Month')+1)}`+`${moment().get('Date')}`+`${moment().get('Hours')}`+`${moment().get('Minutes')}`;
             dbObj['foodItem'] = foodItem;
             dbObj['storeType'] = storeType;
+            dbObj['foodKey'] = dbObj.foodItem+dbObj.DateCreated;
+            
 
             //console.log('Date='+ dbObj['DateCreated']);
             //TODO: Move this to a seperate function
@@ -145,7 +147,7 @@ var handlers = {
                 if(storeType === undefined)
                 {
                     timeList = getListTimes(obj,objColsIndex);
-                    if(timeList)
+                    if(Object.keys(timeList).length > 0)
                     {
                         for(var attName in timeList)
                          {
@@ -180,10 +182,11 @@ var handlers = {
                     timeList = getListTimes(obj, sType);
 
                     var dVal;
-                    console.dir("Yp..."+JSON.stringify(timeList,null),{depth:null,colors:true});    
+                        
 
-                    if (timeList)
+                    if (Object.keys(timeList).length > 0)
                     {
+                        console.dir("Yp..."+JSON.stringify(timeList,null),{depth:null,colors:true});
                         var objArr = Object.keys(timeList);
                          dVal = timeList[objArr[0]];
                          dbObj['exp_'+objArr[0]] = dVal.format('YYYY-MM-DD');
@@ -265,8 +268,12 @@ var handlers = {
         var uName = this.event.session.user.userId;
         var USERID = uName.split('\.');
 
+        var eventObj = this.event;
+        var mythis = this;
+
         var dbObj={};
-        dbObj['USERID'] = USERID;
+        dbObj['TableName'] = "PantryTracker";
+        dbObj['USERID'] = USERID[3];
 
         
         //retriving expiry for food items by name and time
@@ -278,19 +285,21 @@ var handlers = {
             
             console.dir('Old Time = '+ now.format());
             var newDate = now.add(duration);
-            console.log('New Time = '+ Math.floor(newDate/1000000));
-          
-
-        }
+            
+            dbObj['expDate'] = Math.floor(newDate/1000000);
+            console.log('New Time = '+ dbObj['expDate']);
+         }
         else
         {
             //else Expiry date is not given by user. Assume it is today
             var date = Math.floor(moment().unix()/1000);
             console.log('New Time = '+ JSON.stringify(date,null));
-             
-            
+            dbObj['expDate'] = date;
         }
 
+        pullDB(dbObj,eventObj,mythis);
+
+    
     },
     'AMAZON.HelpIntent': function () {
         var speechOutput = "You can ask me to add, delete or update a food item and its expiry date for your pantry";
@@ -409,6 +418,18 @@ function getDuration(metric)
 } //getDuration
 
 
+function getStringfromDuration(vDuration)
+{
+    var duration = moment.duration(vDuration, "weeks").asWeeks();
+
+    console.log("human form is = "+duration);
+    //TODO
+    //Regex to get in weeks, months, days based on user query
+
+    return duration;
+}
+
+
 // Entries are : 'Pantry','DOP_Pantry','Refrigerate','DOP_Refrigerate','Freeze','DOP_Freeze'
 // Order of priority: Refrigerate, DOP_Refrigerate,Pantry, DOP_PAntry, Freeze, DOP_Freeze
 
@@ -459,7 +480,7 @@ function postDB (dbObject, eventObj, mythis)
      //   var foodItem = reqObj.event.request.intent.slots.foodItem.value;
             if (!err)
             {
-                console.dir('successfully added item to the db'+JSON.stringify(data,null));
+                console.dir('successfully added item to the db'+JSON.stringify(data,null,2));
                 //Speech output 
                 var speechOutput = `${foodItem} added to yor list. Do you like to add anything else?`;
                 var reprompt = "Do you like to add anything else?";
@@ -478,3 +499,44 @@ function postDB (dbObject, eventObj, mythis)
 }
 
 
+function getFoodList(items)
+{
+    var list = items[0].foodItem;
+
+    for (var i=1;i<items.length;i++)
+    {
+        console.log(items[i].foodItem);
+        list += " "+items[i].foodItem;
+    }
+    return list;
+}   
+
+
+function pullDB (dbObject, eventObj, mythis)
+{
+//TODO: Format output message based on input days, weeks, months
+//TODO: Format output message nicely in singular or plural forms
+
+    var dur = getStringfromDuration(eventObj.request.intent.slots.expDate.value);
+
+        dbHelp.fetchfromDB(dbObject, 1, (err,data)=> {
+            if(!err)
+            {
+                console.log("Items expiring based in "+ dur +"= "+JSON.stringify(data.Items,null,2));    
+                var list = getFoodList(data.Items);
+
+                var speechOutput = `Items expiring in ${dur} weeks are ` + list;
+                var reprompt = "Do you like to check more items in the pantry?";
+                var content = `Here is the list of items expiring in the pantry ${list}`; 
+
+                mythis.emit(':askWithCard', speechOutput, reprompt, SKILL_NAME,content);
+                console.log("comes here?");   
+            }
+            
+            else
+            {
+                console.log("err in querying "  + err) ;
+            }
+        
+    });
+}
